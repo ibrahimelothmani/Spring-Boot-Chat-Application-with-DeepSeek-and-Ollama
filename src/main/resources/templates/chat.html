@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>DeepSeek Chat</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<style>
+    body {
+        margin: 0;
+        font-family: 'Roboto', 'Arial', sans-serif;
+        background-color: #f4f7fb;
+        color: #333;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        text-align: center;
+    }
+
+    .chat-container {
+        width: 100%;
+        max-width: 900px;
+        height: 75vh;
+        display: flex;
+        flex-direction: column;
+        border-radius: 10px;
+        background-color: #fff;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .chat-header {
+        padding: 20px;
+        background-color: #673AB7;
+        color: #fff;
+        border-radius: 10px 10px 0 0;
+    }
+
+    .chat-header h2 {
+        font-size: 1.8rem;
+        margin: 0;
+        font-weight: 600;
+    }
+
+    .chat-messages {
+        flex: 1;
+        padding: 20px;
+        overflow-y: auto;
+        background-color: #f9f9f9;
+        border-bottom: 1px solid #ddd;
+        border-radius: 0 0 10px 10px;
+        box-sizing: border-box;
+    }
+
+    .message {
+        margin-bottom: 15px;
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .user-message {
+        justify-content: flex-end;
+    }
+
+    .bot-message {
+        justify-content: flex-start;
+    }
+
+    .message-bubble {
+        max-width: 75%;
+        padding: 12px 18px;
+        border-radius: 20px;
+        font-size: 1rem;
+        line-height: 1.4;
+        word-wrap: break-word;
+        box-sizing: border-box;
+    }
+
+    .user-message .message-bubble {
+        background-color: #4CAF50;
+        color: white;
+        border-bottom-right-radius: 0;
+    }
+
+    .bot-message .message-bubble {
+        background-color: #f0f0f0;
+        color: #333;
+        border-bottom-left-radius: 0;
+    }
+
+    .input-area {
+        padding: 15px;
+        display: flex;
+        gap: 15px;
+        background-color: #fff;
+        border-top: 1px solid #ddd;
+    }
+
+    #message-input {
+        flex: 1;
+        padding: 12px;
+        font-size: 1rem;
+        border: 1px solid #ddd;
+        border-radius: 25px;
+        outline: none;
+        transition: all 0.3s;
+    }
+
+    #message-input:focus {
+        border-color: #673AB7;
+        box-shadow: 0 0 5px rgba(103, 58, 183, 0.5);
+    }
+
+    #send-button {
+        padding: 12px 20px;
+        font-size: 1rem;
+        background-color: #673AB7;
+        color: white;
+        border: none;
+        border-radius: 25px;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    #send-button:hover {
+        background-color: #5E35B1;
+    }
+
+    #send-button:active {
+        transform: scale(0.98);
+    }
+</style>
+
+<body>
+<div class="chat-container">
+    <div class="chat-header">
+        <h2>Spring Boot DeepSeek Chat Application</h2>
+    </div>
+    <div class="chat-messages" id="message-container">
+        <!-- Messages will be added here dynamically -->
+    </div>
+    <div class="input-area">
+        <input type="text" id="message-input" placeholder="Type your message…">
+        <button id="send-button">Send</button>
+    </div>
+</div>
+
+<script>
+    const messageInput = document.getElementById('message-input');
+    const sendButton = document.getElementById('send-button');
+    const messageContainer = document.getElementById('message-container');
+
+    // Handle sending messages
+    async function sendMessage() {
+        const prompt = messageInput.value.trim();
+
+        if (!prompt) return;
+
+        // Add user message
+        appendMessage(prompt, 'user');
+        messageInput.value = '';
+
+        try {
+            // Get response from backend
+            const response = await fetch('/api/chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `prompt=${encodeURIComponent(prompt)}`,
+            });
+
+            const botResponse = await response.text();
+
+            // Add bot response
+            appendMessage(botResponse, 'bot');
+        } catch (error) {
+            appendMessage('Error: Could not get response', 'bot');
+        }
+    }
+
+    // Add messages to the chat
+    function appendMessage(text, sender) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${sender}-message`;
+
+        const bubble = document.createElement('div');
+        bubble.className = 'message-bubble';
+        bubble.textContent = text;
+
+        messageDiv.appendChild(bubble);
+        messageContainer.appendChild(messageDiv);
+
+        // Auto-scroll to bottom
+        messageContainer.scrollTop = messageContainer.scrollHeight;
+    }
+
+    // Event listeners
+    sendButton.addEventListener('click', sendMessage);
+
+    messageInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            sendMessage();
+        }
+    });
+</script>
+</body>
+</html>
